@@ -1,0 +1,7 @@
+# Tài liệu tham khảo (PDF, bài báo, ...)
+docs/
+
+# Dữ liệu đã sinh nhãn (sinh lại bằng generate_labels.py)
+data/*/processed/
+
+__pycache__/

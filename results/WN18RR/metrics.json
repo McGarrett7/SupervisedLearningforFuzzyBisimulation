@@ -1,0 +1,30 @@
+{
+  "num_test_pairs": 7820,
+  "checkpoint_epoch": 10,
+  "model_config": {
+    "in_dim": 24,
+    "hidden_dim": 128,
+    "num_gnn_layers": 3,
+    "num_mlp_layers": 3,
+    "use_gnn": true,
+    "use_diff": true
+  },
+  "proposed": {
+    "mae": 0.20793494582176208,
+    "mse": 0.09147477895021439,
+    "rmse": 0.30244797468185425,
+    "pearson": 0.5719367861747742,
+    "spearman": 0.48454506920049467,
+    "kendall_tau": 0.3803229033946991,
+    "inference_seconds": 0.09398910007439554
+  },
+  "common_neighbors": {
+    "mae": 0.21037949801633835,
+    "mse": 0.10433146680624629,
+    "rmse": 0.3230038185629487,
+    "pearson": 0.5095498542384383,
+    "spearman": 0.4959191769761731,
+    "kendall_tau": 0.4136578585791726,
+    "inference_seconds": 0.0137800999218598
+  }
+}
