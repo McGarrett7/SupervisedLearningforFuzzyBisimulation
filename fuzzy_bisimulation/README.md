@@ -59,7 +59,7 @@ python -m fuzzy_bisimulation.evaluate --dataset WN18RR
 
 Bài báo dùng 50.000 / 80.000 / 150.000 cặp có nhãn cho FB15k-237 / WN18RR / YAGO3-10. Mỗi script liệt kê các tuỳ chọn bằng `--help`; giá trị mặc định khớp với cấu hình trong bài báo (GCN 3 lớp, kích thước ẩn 128, đầu MLP 3 lớp, learning rate 1e-3, batch size 128, tối đa 100 epoch). Để chạy nhanh hơn, giảm số epoch bằng `--epochs`, ví dụ `--epochs 10`.
 
-Các biến thể ablation (Mục 5.6) được huấn luyện với `--no_gnn` hoặc `--no_diff`:
+Các biến thể ablation được huấn luyện với `--no_gnn` hoặc `--no_diff`:
 
 ```bash
 python -m fuzzy_bisimulation.train --dataset WN18RR --no_gnn --checkpoint_dir checkpoints/WN18RR_no_gnn

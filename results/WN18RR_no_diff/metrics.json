@@ -7,16 +7,16 @@
     "num_gnn_layers": 3,
     "num_mlp_layers": 3,
     "use_gnn": true,
-    "use_diff": true
+    "use_diff": false
   },
   "proposed": {
-    "mae": 0.1949063241481781,
-    "mse": 0.09438546746969223,
-    "rmse": 0.3072221875190735,
-    "pearson": 0.5675444602966309,
-    "spearman": 0.47765254331943846,
-    "kendall_tau": 0.37612498829477103,
-    "inference_seconds": 0.23001325700010966
+    "mae": 0.20046979188919067,
+    "mse": 0.09379543364048004,
+    "rmse": 0.3062604069709778,
+    "pearson": 0.5641250014305115,
+    "spearman": 0.48993012951517595,
+    "kendall_tau": 0.38497107828272464,
+    "inference_seconds": 0.30308985100054997
   },
   "common_neighbors": {
     "mae": 0.21037949801633835,
@@ -25,6 +25,6 @@
     "pearson": 0.5095498542384392,
     "spearman": 0.4959191769761731,
     "kendall_tau": 0.4136578585791726,
-    "inference_seconds": 0.027797426000006453
+    "inference_seconds": 0.020279075999496854
   }
 }
