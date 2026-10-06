@@ -1,20 +1,12 @@
-"""
-Supervised Learning Training Pipeline.
-
-Implements the supervised model training stage of Algorithm 1: trains the GNN-based
-pairwise predictor to approximate exact fuzzy bisimulation values with the Huber loss
-and the Adam optimizer, applies early stopping on validation MAE, and saves model
-checkpoints to checkpoints/ directory.
-"""
+# Huấn luyện có giám sát (Algorithm 1): Huber loss, Adam, dừng sớm theo MAE validation.
 
 import argparse
 import json
 import time
 from pathlib import Path
-from typing import Optional
+from typing import NamedTuple, Optional
 import torch
 import torch.nn as nn
-from torch_geometric.data import Data
 
 from .fuzzy_kg import structural_node_features
 from .model import FuzzyBisimNet
@@ -22,14 +14,15 @@ from .model import FuzzyBisimNet
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def load_graph(graph_path: Path, device: torch.device) -> Data:
-    """
-    Loads the fuzzy knowledge graph exported by generate_labels.py.
+# Đồ thị mờ ở dạng tensor: đặc trưng nút, cạnh (head -> tail) và trọng số mờ của cạnh.
+class GraphData(NamedTuple):
+    x: torch.Tensor
+    edge_index: torch.Tensor
+    edge_weight: torch.Tensor
 
-    Returns:
-        Data: Graph with node features x, edge_index (head -> tail) and the fuzzy
-        weights as edge_attr.
-    """
+
+# Nạp đồ thị mờ do generate_labels.py xuất ra, kèm đặc trưng nút.
+def load_graph(graph_path: Path, device: torch.device) -> GraphData:
     graph = torch.load(graph_path)
     heads, tails = graph["edge_index"].numpy()
     x = torch.from_numpy(
@@ -42,22 +35,23 @@ def load_graph(graph_path: Path, device: torch.device) -> Data:
             graph["edge_weight"].numpy(),
         )
     )
-    return Data(x=x, edge_index=graph["edge_index"], edge_attr=graph["edge_weight"]).to(device)
+    return GraphData(x.to(device), graph["edge_index"].to(device), graph["edge_weight"].to(device))
 
 
+# Chấm điểm các cặp thực thể bằng một lần lan truyền GNN trên toàn đồ thị.
 @torch.no_grad()
 def predict(
     model: FuzzyBisimNet,
-    data: Data,
+    data: GraphData,
     pairs: torch.Tensor,
     batch_size: int = 65536,
 ) -> torch.Tensor:
-    """Scores entity pairs with a single GNN forward pass over the graph."""
     model.eval()
-    h = model.encode(data.x, data.edge_index, data.edge_attr)
+    h = model.encode(data.x, data.edge_index, data.edge_weight)
     return torch.cat([model.score(h, pairs[i:i + batch_size]) for i in range(0, pairs.shape[0], batch_size)])
 
 
+# Huấn luyện mô hình, theo dõi MAE validation và lưu checkpoint tốt nhất.
 def train(
     data_dir: Path,
     checkpoint_dir: Path,
@@ -74,9 +68,6 @@ def train(
     seed: int = 42,
     device: Optional[str] = None,
 ) -> None:
-    """
-    Executes training loop and records training / validation losses.
-    """
     torch.manual_seed(seed)
     run_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -90,7 +81,7 @@ def train(
     print(f"  {train_pairs.shape[0]} training pairs, {val_pairs.shape[0]} validation pairs, device: {run_device}")
 
     model = FuzzyBisimNet(
-        in_dim=data.num_node_features,
+        in_dim=data.x.shape[1],
         hidden_dim=hidden_dim,
         num_gnn_layers=num_gnn_layers,
         num_mlp_layers=num_mlp_layers,
@@ -114,7 +105,7 @@ def train(
         for i in range(0, num_train, batch_size):
             batch = permutation[i:i + batch_size]
             optimizer.zero_grad()
-            out = model(data.x, data.edge_index, data.edge_attr, train_pairs[batch])
+            out = model(data.x, data.edge_index, data.edge_weight, train_pairs[batch])
             loss = criterion(out, train_labels[batch])
             loss.backward()
             optimizer.step()

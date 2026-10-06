@@ -1,1 +1,1 @@
-"""Fuzzy Bisimulation Package."""
+# Gói Fuzzy Bisimulation.

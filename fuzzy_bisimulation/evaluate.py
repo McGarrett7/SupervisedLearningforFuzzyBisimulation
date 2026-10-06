@@ -1,17 +1,10 @@
-"""
-Evaluation and Metrics Benchmark Module.
-
-Loads trained checkpoints and compares predictions against exact ground-truth values.
-Outputs quantitative metrics (MAE, MSE, RMSE, Pearson / Spearman / Kendall-Tau
-correlation), the inference time, and a Common Neighbors baseline, and exports
-evaluation summaries to results/ directory.
-"""
+# Đánh giá checkpoint so với nhãn chính xác và xuất kết quả vào results/.
 
 import argparse
 import json
 import time
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 import matplotlib
 
 matplotlib.use("Agg")
@@ -27,26 +20,26 @@ from .train import load_graph, predict
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
+# Lấy hệ số tương quan từ kết quả của scipy.stats.
+def _statistic(result: Any) -> float:
+    return float(result[0])
+
+
+# Tính MAE, MSE, RMSE và các hệ số tương quan giữa dự đoán và nhãn chính xác.
 def compute_metrics(predictions: np.ndarray, labels: np.ndarray) -> Dict[str, float]:
-    """Measures the numerical agreement between predicted and exact similarity values."""
     error = predictions - labels
     return {
         "mae": float(np.abs(error).mean()),
         "mse": float((error ** 2).mean()),
         "rmse": float(np.sqrt((error ** 2).mean())),
-        "pearson": float(scipy.stats.pearsonr(predictions, labels)[0]),
-        "spearman": float(scipy.stats.spearmanr(predictions, labels)[0]),
-        "kendall_tau": float(scipy.stats.kendalltau(predictions, labels)[0]),
+        "pearson": _statistic(scipy.stats.pearsonr(predictions, labels)),
+        "spearman": _statistic(scipy.stats.spearmanr(predictions, labels)),
+        "kendall_tau": _statistic(scipy.stats.kendalltau(predictions, labels)),
     }
 
 
+# Baseline Common Neighbors: tỉ lệ lân cận chung của hai thực thể.
 def common_neighbors_scores(edge_index: np.ndarray, num_entities: int, pairs: np.ndarray) -> np.ndarray:
-    """
-    Structural heuristic baseline: shared neighbors of the two entities.
-
-    The paper does not state how the count is mapped to [0, 1]; here it is divided by
-    the size of the larger of the two (undirected) neighborhoods.
-    """
     rows = np.concatenate([edge_index[0], edge_index[1]])
     cols = np.concatenate([edge_index[1], edge_index[0]])
     adjacency = sp.csr_matrix((np.ones(rows.shape[0]), (rows, cols)), shape=(num_entities, num_entities))
@@ -58,8 +51,8 @@ def common_neighbors_scores(edge_index: np.ndarray, num_entities: int, pairs: np
     return common / np.maximum(largest, 1.0)
 
 
+# Vẽ biểu đồ phân tán giữa giá trị dự đoán và giá trị chính xác.
 def plot_predictions(predictions: np.ndarray, labels: np.ndarray, path: Path, max_points: int = 5000) -> None:
-    """Saves a scatter plot of predicted against exact fuzzy bisimulation values."""
     if predictions.shape[0] > max_points:
         keep = np.random.default_rng(0).choice(predictions.shape[0], max_points, replace=False)
         predictions, labels = predictions[keep], labels[keep]
@@ -81,19 +74,17 @@ def plot_predictions(predictions: np.ndarray, labels: np.ndarray, path: Path, ma
         ax.spines[side].set_visible(False)
     for side in ("bottom", "left"):
         ax.spines[side].set_color("#898781")
-    fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
+    fig.savefig(str(path), dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.close(fig)
 
 
+# Đánh giá mô hình trên tập test, đo thời gian suy luận và ghi báo cáo.
 def evaluate(
     checkpoint_path: Path,
     test_data_path: Path,
     results_dir: Path,
     device: Optional[str] = None,
 ) -> None:
-    """
-    Evaluates the model on test pairs and logs metrics to results directory.
-    """
     run_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     results_dir.mkdir(parents=True, exist_ok=True)
 
@@ -108,7 +99,7 @@ def evaluate(
     pairs = test_set["pairs"].to(run_device)
     labels = test_set["labels"].numpy()
 
-    # Inference time covers the GNN forward pass and the scoring of all test pairs.
+    # Thời gian suy luận gồm lan truyền GNN và chấm điểm toàn bộ cặp test.
     if run_device.type == "cuda":
         torch.cuda.synchronize()
     start = time.perf_counter()
@@ -119,15 +110,18 @@ def evaluate(
     predictions = predictions.cpu().numpy()
 
     start = time.perf_counter()
-    baseline = common_neighbors_scores(data.edge_index.cpu().numpy(), data.num_nodes, test_set["pairs"].numpy())
+    baseline = common_neighbors_scores(data.edge_index.cpu().numpy(), data.x.shape[0], test_set["pairs"].numpy())
     baseline_time = time.perf_counter() - start
 
+    method_metrics: Dict[str, Dict[str, float]] = {
+        "proposed": {**compute_metrics(predictions, labels), "inference_seconds": inference_time},
+        "common_neighbors": {**compute_metrics(baseline, labels), "inference_seconds": baseline_time},
+    }
     report = {
         "num_test_pairs": int(labels.shape[0]),
         "checkpoint_epoch": checkpoint["epoch"],
         "model_config": checkpoint["model_config"],
-        "proposed": {**compute_metrics(predictions, labels), "inference_seconds": inference_time},
-        "common_neighbors": {**compute_metrics(baseline, labels), "inference_seconds": baseline_time},
+        **method_metrics,
     }
     with open(results_dir / "metrics.json", "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2)
@@ -141,8 +135,7 @@ def evaluate(
     )
     plot_predictions(predictions, labels, results_dir / "predictions.png")
 
-    for name in ("proposed", "common_neighbors"):
-        metrics = report[name]
+    for name, metrics in method_metrics.items():
         print(
             f"  {name:17s} MAE: {metrics['mae']:.4f} | RMSE: {metrics['rmse']:.4f} | "
             f"Pearson r: {metrics['pearson']:.4f} | Time: {metrics['inference_seconds']:.4f}s"

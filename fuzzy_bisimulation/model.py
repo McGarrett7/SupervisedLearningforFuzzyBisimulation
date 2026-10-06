@@ -1,29 +1,16 @@
-"""
-Neural Similarity Model Module.
-
-Defines the GNN-based pairwise predictor of Sections 4.4-4.6 of the paper:
-
-    f(s_i, s_j) = Sigmoid( MLP( [ h_i || h_j || |h_i - h_j| ] ) ),   h = GNN(G)
-
-The encoder stacks torch_geometric GCNConv layers that use the fuzzy weights as edge
-weights.
-"""
+# Mô hình dự đoán độ tương đồng theo cặp:
+# f(s_i, s_j) = Sigmoid(MLP([h_i || h_j || |h_i - h_j|])), h = GCNConv(G) với trọng số mờ làm trọng số cạnh
 
 from typing import Any, Dict
 import torch
 import torch.nn as nn
 from torch_geometric.nn import GCNConv
 
-
+# Bộ mã hoá GNN và đầu dự đoán theo cặp. use_gnn=False thay GCNConv bằng lớp tuyến tính,
+# use_diff=False bỏ |h_i - h_j| (dùng cho ablation)
 class FuzzyBisimNet(nn.Module):
-    """
-    GNN encoder followed by a metric-aware pairwise similarity head.
 
-    use_gnn=False replaces the graph convolutions by linear layers (no neighborhood
-    aggregation) and use_diff=False drops |h_i - h_j|; both exist for the ablation
-    study (Section 5.6).
-    """
-
+    # Khởi tạo các lớp mã hoá và đầu MLP theo cấu hình.
     def __init__(
         self,
         in_dim: int,
@@ -57,8 +44,8 @@ class FuzzyBisimNet(nn.Module):
         head.append(nn.Linear(head_in, 1))
         self.mlp = nn.Sequential(*head)
 
+    # Ánh xạ mỗi thực thể thành biểu diễn cấu trúc h_i
     def encode(self, x: torch.Tensor, edge_index: torch.Tensor, edge_weight: torch.Tensor) -> torch.Tensor:
-        """Maps every entity to its structural representation h_i (Eq. 3-4)."""
         h = x
         for i, layer in enumerate(self.encoder):
             h = layer(h, edge_index, edge_weight) if self.use_gnn else layer(h)
@@ -66,12 +53,13 @@ class FuzzyBisimNet(nn.Module):
                 h = torch.relu(h)
         return h
 
+    # Dự đoán độ tương đồng của các cặp (P x 2) từ biểu diễn h
     def score(self, h: torch.Tensor, pairs: torch.Tensor) -> torch.Tensor:
-        """Predicts the similarity of the entity pairs (P x 2) from the representations h (Eq. 5-7)."""
         h_i, h_j = h[pairs[:, 0]], h[pairs[:, 1]]
         parts = [h_i, h_j, torch.abs(h_i - h_j)] if self.use_diff else [h_i, h_j]
         return torch.sigmoid(self.mlp(torch.cat(parts, dim=-1))).squeeze(-1)
 
+    # Mã hoá đồ thị rồi chấm điểm các cặp.
     def forward(
         self,
         x: torch.Tensor,

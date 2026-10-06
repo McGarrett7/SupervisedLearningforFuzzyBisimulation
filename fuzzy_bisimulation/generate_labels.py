@@ -1,11 +1,4 @@
-"""
-Dataset and Ground-Truth Label Generation.
-
-Implements the offline semantic label generation stage of Algorithm 1: samples seed
-entities, extracts their local subgraphs with local_sampling.py, computes ground-truth
-fuzzy bisimulation values with exact_bisimulation.py, and exports the labeled entity
-pairs (train/val/test) to the data/ directory.
-"""
+# Sinh nhãn offline (Algorithm 1): lấy mẫu đồ thị con, tính nhãn chính xác và xuất tập train/val/test.
 
 import argparse
 import json
@@ -23,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPLITS = ("train", "val", "test")
 
 
+# Fuzzy hoá đồ thị, lấy mẫu đồ thị con, gán nhãn fuzzy bisimulation cho các cặp và chia tập theo đồ thị con.
 def generate_dataset(
     data_dir: Path,
     output_dir: Path,
@@ -36,14 +30,6 @@ def generate_dataset(
     split: Tuple[float, float, float] = (0.8, 0.1, 0.1),
     seed: int = 42,
 ) -> None:
-    """
-    Orchestrates fuzzification, local subgraph sampling, exact bisimulation ground-truth
-    computation, and dataset splitting (train/val/test).
-
-    Every pair (s_i, s_j) is labeled with y_ij = B*_{G_k}(s_i, s_j), the greatest fixed
-    point computed on the local subgraph G_k it was drawn from. All pairs of one subgraph
-    go to the same partition to prevent leakage between the splits.
-    """
     rng = np.random.default_rng(seed)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -77,7 +63,7 @@ def generate_dataset(
         )
         exact_time += time.perf_counter() - start
 
-        # Ordered pairs (i, j) with i != j, drawn without replacement.
+        # Cặp có thứ tự (i, j), i != j, lấy không hoàn lại.
         num_selected = min(pairs_per_subgraph, size * (size - 1), num_pairs - num_generated)
         flat = rng.choice(size * (size - 1), size=num_selected, replace=False)
         first, second = flat // (size - 1), flat % (size - 1)
@@ -95,7 +81,7 @@ def generate_dataset(
     all_labels = torch.from_numpy(np.concatenate(labels).astype(np.float32))
     all_subgraph_ids = torch.from_numpy(np.concatenate(subgraph_ids))
 
-    # Seeds were drawn in random order, so consecutive blocks of subgraphs form the splits.
+    # Hạt giống đã xáo ngẫu nhiên nên chia tập theo các khối đồ thị con liên tiếp.
     num_subgraphs = len(subgraph_sizes)
     train_end = int(round(split[0] * num_subgraphs))
     val_end = train_end + int(round(split[1] * num_subgraphs))

@@ -16,7 +16,7 @@
     "pearson": 0.5719367861747742,
     "spearman": 0.48454506920049467,
     "kendall_tau": 0.3803229033946991,
-    "inference_seconds": 0.09398910007439554
+    "inference_seconds": 0.18856939999386668
   },
   "common_neighbors": {
     "mae": 0.21037949801633835,
@@ -25,6 +25,6 @@
     "pearson": 0.5095498542384383,
     "spearman": 0.4959191769761731,
     "kendall_tau": 0.4136578585791726,
-    "inference_seconds": 0.0137800999218598
+    "inference_seconds": 0.013802799978293478
   }
 }

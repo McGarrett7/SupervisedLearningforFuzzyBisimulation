@@ -1,10 +1,4 @@
-"""
-Local Sampling and Subgraph Extraction Module.
-
-Extracts h-hop local subgraphs G_k = N_h(s_k) around seed entities (Sections 4.2 and 5.2
-of the paper) so that exact fuzzy bisimulation only has to be computed on graphs of
-bounded size instead of the whole Cartesian product S x S.
-"""
+# Lấy mẫu đồ thị con cục bộ h-hop G_k = N_h(s_k) quanh thực thể hạt giống
 
 from dataclasses import dataclass
 from typing import Tuple
@@ -15,12 +9,8 @@ from .fuzzy_kg import FuzzyKnowledgeGraph
 
 @dataclass
 class LocalSubgraph:
-    """
-    Induced local subgraph G_k = (S_k, R_k, w_k).
-
-    nodes holds the global entity ids of S_k (the seed comes first); heads and tails are
-    local indices into nodes, relations keeps the global relation ids.
-    """
+    # Đồ thị con cảm sinh G_k; nodes là id toàn cục (hạt giống đứng đầu)
+    # heads/tails là chỉ số cục bộ trong nodes
 
     seed: int
     nodes: np.ndarray
@@ -29,30 +19,29 @@ class LocalSubgraph:
     tails: np.ndarray
     weights: np.ndarray
 
+    # Số nút của đồ thị con
     @property
     def num_nodes(self) -> int:
         return int(self.nodes.shape[0])
 
 
+# Gom các vị trí theo khoá để tra nhanh danh sách cạnh của từng nút
 def _group_by(keys: np.ndarray, num_groups: int) -> Tuple[np.ndarray, np.ndarray]:
-    """Returns (indptr, order) so that order[indptr[v]:indptr[v + 1]] lists the positions with key v."""
     order = np.argsort(keys, kind="stable")
     indptr = np.zeros(num_groups + 1, dtype=np.int64)
     np.cumsum(np.bincount(keys, minlength=num_groups), out=indptr[1:])
     return indptr, order
 
 
+# Bộ lấy mẫu lân cận h-hop quanh thực thể hạt giống bằng BFS
 class LocalNeighborhoodSampler:
-    """
-    Samples h-hop neighborhoods around seed entities using breadth-first search.
-    """
-
+    # Dựng sẵn chỉ mục cạnh kề (cả hai chiều) và cạnh đi ra của từng nút
     def __init__(self, graph: FuzzyKnowledgeGraph, num_hops: int = 2, max_nodes: int = 64):
         self.graph = graph
         self.num_hops = num_hops
         self.max_nodes = max_nodes
 
-        # Neighborhoods are expanded along both edge directions.
+        # Mở rộng lân cận theo cả hai chiều cạnh
         self._neighbors = np.concatenate([graph.tails, graph.heads])
         self._neighbor_weights = np.concatenate([graph.weights, graph.weights])
         self._adj_indptr, self._adj_order = _group_by(
@@ -61,23 +50,12 @@ class LocalNeighborhoodSampler:
         self._out_indptr, self._out_order = _group_by(graph.heads, graph.num_entities)
         self._local_index = np.full(graph.num_entities, -1, dtype=np.int64)
 
+    # Lấy các cạnh gắn với một tập nút
     def _incident(self, nodes: np.ndarray, indptr: np.ndarray, order: np.ndarray) -> np.ndarray:
         return np.concatenate([order[indptr[v]:indptr[v + 1]] for v in nodes])
 
+    # Trích đồ thị con quanh hạt giống, khi vượt số nút tối đa thì giữ các nút nối mạnh nhất về lớp trước
     def sample(self, seed: int) -> LocalSubgraph:
-        """
-        Extracts the subgraph induced by the entities within num_hops of the seed.
-
-        When a BFS frontier does not fit in the remaining node budget, the boundary
-        entities with the largest total fuzzy weight towards the previous frontier are
-        kept, which favours strongly and densely connected neighbors.
-
-        Args:
-            seed: Global id of the seed entity s_k.
-
-        Returns:
-            LocalSubgraph: Induced subgraph with at most max_nodes entities.
-        """
         selected = [np.array([seed], dtype=np.int64)]
         self._local_index[seed] = 0
         num_selected = 1
