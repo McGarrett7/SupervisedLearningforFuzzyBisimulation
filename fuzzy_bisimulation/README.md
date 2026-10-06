@@ -68,8 +68,6 @@ python -m fuzzy_bisimulation.evaluate --dataset WN18RR --checkpoint_path checkpo
 
 ## Các lựa chọn khi cài đặt
 
-Bài báo không nêu rõ những chi tiết dưới đây; trong code chúng được cố định như sau.
-
 - **Ngữ nghĩa mờ.** Mặc định là ngữ nghĩa Gödel (t-norm minimum và phép kéo theo tương ứng). Chọn ngữ nghĩa khác bằng `--semantics`.
 - **Chuẩn hoá khi fuzzy hoá.** `Freq(r)` là số bộ ba của `r` chia cho số bộ ba của quan hệ phổ biến nhất; `Deg(s, s')` là trung bình bậc theo thang log của hai thực thể. Cả hai nằm trong [0, 1].
 - **Chọn nút biên.** Khi một lớp BFS vượt quá số nút cho phép, giữ lại các thực thể có tổng trọng số mờ nối về lớp trước lớn nhất.
