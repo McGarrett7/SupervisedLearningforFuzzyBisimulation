@@ -1,0 +1,31 @@
+{
+  "dataset": "WN18RR",
+  "num_entities": 40943,
+  "num_relations": 11,
+  "num_triples": 86835,
+  "num_pairs": 80000,
+  "num_subgraphs": 896,
+  "mean_subgraph_size": 32.24330357142857,
+  "split_sizes": {
+    "train": 63930,
+    "val": 8250,
+    "test": 7820
+  },
+  "label_mean": 0.26206129789352417,
+  "label_std": 0.38669875264167786,
+  "exact_bisimulation_seconds": 1.7374494279978308,
+  "config": {
+    "pairs_per_subgraph": 100,
+    "num_hops": 2,
+    "max_nodes": 64,
+    "semantics": "godel",
+    "alpha": 0.6,
+    "beta": 0.4,
+    "split": [
+      0.8,
+      0.1,
+      0.1
+    ],
+    "seed": 42
+  }
+}

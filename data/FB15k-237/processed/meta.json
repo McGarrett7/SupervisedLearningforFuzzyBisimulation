@@ -1,0 +1,31 @@
+{
+  "dataset": "FB15k-237",
+  "num_entities": 14541,
+  "num_relations": 237,
+  "num_triples": 272115,
+  "num_pairs": 50000,
+  "num_subgraphs": 503,
+  "mean_subgraph_size": 62.137176938369784,
+  "split_sizes": {
+    "train": 39954,
+    "val": 5000,
+    "test": 5046
+  },
+  "label_mean": 0.046232402324676514,
+  "label_std": 0.17746476829051971,
+  "exact_bisimulation_seconds": 14.092652314004681,
+  "config": {
+    "pairs_per_subgraph": 100,
+    "num_hops": 2,
+    "max_nodes": 64,
+    "semantics": "godel",
+    "alpha": 0.6,
+    "beta": 0.4,
+    "split": [
+      0.8,
+      0.1,
+      0.1
+    ],
+    "seed": 42
+  }
+}
