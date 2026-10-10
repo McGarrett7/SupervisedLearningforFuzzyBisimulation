@@ -13,7 +13,7 @@
   },
   "label_mean": 0.2595210373401642,
   "label_std": 0.3372025489807129,
-  "exact_bisimulation_seconds": 11.77434587099981,
+  "exact_bisimulation_seconds": 12.81544343600109,
   "config": {
     "pairs_per_subgraph": 100,
     "num_hops": 2,
