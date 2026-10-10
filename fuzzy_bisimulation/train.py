@@ -14,7 +14,7 @@ from .model import FuzzyBisimNet
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-# Đồ thị mờ ở dạng tensor: đặc trưng nút, cạnh (head -> tail) và trọng số mờ của cạnh.
+# Đồ thị mờ ở dạng tensor: đặc trưng nút, cạnh truyền tin (tail -> head) và trọng số mờ của cạnh.
 class GraphData(NamedTuple):
     x: torch.Tensor
     edge_index: torch.Tensor
@@ -35,7 +35,9 @@ def load_graph(graph_path: Path, device: torch.device) -> GraphData:
             graph["edge_weight"].numpy(),
         )
     )
-    return GraphData(x.to(device), graph["edge_index"].to(device), graph["edge_weight"].to(device))
+    # Đảo chiều cạnh để mỗi thực thể gom thông tin từ các nút kế tiếp, đúng với chiều chuyển đi ra của toán tử F.
+    edge_index = graph["edge_index"].flip(0)
+    return GraphData(x.to(device), edge_index.to(device), graph["edge_weight"].to(device))
 
 
 # Chấm điểm các cặp thực thể bằng một lần lan truyền GNN trên toàn đồ thị.

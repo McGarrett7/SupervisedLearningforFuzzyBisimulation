@@ -1,6 +1,6 @@
 {
   "num_test_pairs": 7820,
-  "checkpoint_epoch": 21,
+  "checkpoint_epoch": 23,
   "model_config": {
     "in_dim": 24,
     "hidden_dim": 128,
@@ -10,21 +10,21 @@
     "use_diff": true
   },
   "proposed": {
-    "mae": 0.1949063241481781,
-    "mse": 0.09438546746969223,
-    "rmse": 0.3072221875190735,
-    "pearson": 0.5675444602966309,
-    "spearman": 0.47765254331943846,
-    "kendall_tau": 0.37612498829477103,
-    "inference_seconds": 0.23001325700010966
+    "mae": 0.1409662812948227,
+    "mse": 0.07626348733901978,
+    "rmse": 0.2761584520339966,
+    "pearson": 0.676965594291687,
+    "spearman": 0.5833033299322264,
+    "kendall_tau": 0.4656425714492798,
+    "inference_seconds": 0.26172280008904636
   },
   "common_neighbors": {
     "mae": 0.21037949801633835,
     "mse": 0.10433146680624629,
     "rmse": 0.3230038185629487,
-    "pearson": 0.5095498542384392,
+    "pearson": 0.5095498542384383,
     "spearman": 0.4959191769761731,
     "kendall_tau": 0.4136578585791726,
-    "inference_seconds": 0.027797426000006453
+    "inference_seconds": 0.018812999944202602
   }
 }

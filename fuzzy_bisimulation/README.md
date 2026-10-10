@@ -72,5 +72,5 @@ python -m fuzzy_bisimulation.evaluate --dataset WN18RR --checkpoint_path checkpo
 - **Chuẩn hoá khi fuzzy hoá.** `Freq(r)` là số bộ ba của `r` chia cho số bộ ba của quan hệ phổ biến nhất; `Deg(s, s')` là trung bình bậc theo thang log của hai thực thể. Cả hai nằm trong [0, 1].
 - **Chọn nút biên.** Khi một lớp BFS vượt quá số nút cho phép, giữ lại các thực thể có tổng trọng số mờ nối về lớp trước lớn nhất.
 - **Đặc trưng nút ban đầu.** Trọng số mờ lớn nhất đi ra và đi vào theo từng loại quan hệ, cùng với bậc ra và bậc vào theo thang log.
-- **Lan truyền GCN.** Bộ mã hoá dùng `GCNConv` của `torch_geometric` với trọng số mờ làm trọng số cạnh, giống `main.py` của repo tham chiếu. Thông tin truyền theo chiều của cạnh, nên mỗi thực thể gom thông tin từ các thực thể trỏ vào nó (và chính nó).
+- **Lan truyền GCN.** Bộ mã hoá dùng `GCNConv` của `torch_geometric` với trọng số mờ làm trọng số cạnh, giống `main.py` của repo tham chiếu. Cạnh được đảo chiều khi nạp đồ thị (`load_graph`), nên thông tin truyền ngược chiều cạnh: mỗi thực thể gom thông tin từ các thực thể kế tiếp mà nó trỏ tới (và chính nó), đúng với việc toán tử `F` so sánh các chuyển đi ra.
 - **Baseline Common Neighbors.** Số lân cận chung được chia cho kích thước của lân cận lớn hơn để có điểm trong [0, 1].
