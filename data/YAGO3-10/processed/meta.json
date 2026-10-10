@@ -1,0 +1,31 @@
+{
+  "dataset": "YAGO3-10",
+  "num_entities": 123182,
+  "num_relations": 37,
+  "num_triples": 1079040,
+  "num_pairs": 150000,
+  "num_subgraphs": 1509,
+  "mean_subgraph_size": 61.85089463220676,
+  "split_sizes": {
+    "train": 120020,
+    "val": 14952,
+    "test": 15028
+  },
+  "label_mean": 0.2595210373401642,
+  "label_std": 0.3372025489807129,
+  "exact_bisimulation_seconds": 11.77434587099981,
+  "config": {
+    "pairs_per_subgraph": 100,
+    "num_hops": 2,
+    "max_nodes": 64,
+    "semantics": "godel",
+    "alpha": 0.6,
+    "beta": 0.4,
+    "split": [
+      0.8,
+      0.1,
+      0.1
+    ],
+    "seed": 42
+  }
+}
